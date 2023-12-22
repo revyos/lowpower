@@ -29,6 +29,8 @@
 #define PMP_BASE_ADDR    0xffdc020000
 #define AONSYS_REG_BASE                 0xFFFFF48000
 #define AO_IOPMP_BASE       0xFFFFC21000
+#define DSPSYS_SW_RST       0xFFEF040028
+
 
 #define REG_AON_CHIP_LP_MODE     (AONSYS_REG_BASE + 0x04 )
 
