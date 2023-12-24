@@ -20,6 +20,7 @@ extern int chip_lp_mode_get_ddr_flag(void);
 extern int chip_lp_mode_set_ddr_flag(int enable);
 extern unsigned long get_sbi_addr(void);
 extern void bringup_prepare(void);
+extern void release_dsp_tcm();
 #define CONFIG_SYS_CACHELINE_SIZE 64
 
 void invalidate_icache_all(void)
@@ -50,6 +51,7 @@ void bringup_prepare(void)
 
         iopmp_reinit();
 
+        release_dsp_tcm();
         //set iopmp flag, notify aon sys is restored
         chip_lp_mode_set_iopmp_flag(1);
 

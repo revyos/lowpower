@@ -16,6 +16,14 @@ void mdelay(int ms)
 	for (i = 0; i < tick; i++);
 }
 
+void release_dsp_tcm(void)
+{
+    unsigned int tmp;
+    tmp = readl((void *)DSPSYS_SW_RST);
+    tmp |= (0x1<<10)|(0x1<<9)|(0x1<<8); // release dsp0
+    tmp |= (0x1<<14)|(0x1<<13)|(0x1<<12); // release dsp1
+    writel(tmp,(void *)DSPSYS_SW_RST);
+}
 void setup_ddr_pmp(void)
 {
     /* clear pmp entry0,entry1 setting in bootrom */
@@ -97,6 +105,7 @@ void iopmp_reinit(void)
 
 	//config aon sys iopmp config
 	writel(0xffffffff, (void *)(AO_IOPMP_BASE + 0xc0));
+
 }
 
 #define LP_NONE             (0)
