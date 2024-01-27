@@ -13,14 +13,15 @@ _start:
     csrw 0x7c5, t0
     /* Enable cache ASAP as LIGHT's requirement */
     /* icache enable */
-	csrr x29, mhcr
+    /* mhcr is 0x7c1 */
+	csrr x29, 0x7c1
 	ori x28, x29, 0x1
-	csrw mhcr, x28
+	csrw 0x7c1, x28
 
 	/* dcache enable */
-	csrr x29, mhcr
+	csrr x29, 0x7c1
 	ori x28, x29, 0x2
-	csrw mhcr, x28
+	csrw 0x7c1, x28
 
     la  t0, _trap_entry
     csrw    mtvec, t0
