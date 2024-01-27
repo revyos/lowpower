@@ -18,7 +18,11 @@ GENFLAGS    +=  $(firmware-genflags-y)
 CFLAGS      =   -g -Wall -Werror -ffreestanding -nostdlib -fno-strict-aliasing -O2
 CFLAGS      +=  -fno-omit-frame-pointer -fno-optimize-sibling-calls
 CFLAGS      +=  -mno-save-restore -mstrict-align
-CFLAGS      +=  -mabi=lp64 -march=rv64im
+ifeq ($(FENCEI_CSR),y)
+	CFLAGS      +=  -mabi=lp64 -march=rv64im_zicsr_zifencei
+else
+	CFLAGS      +=  -mabi=lp64 -march=rv64im
+endif
 CFLAGS      +=  -mcmodel=medany
 CFLAGS		+=  -D__KERNEL__
 CFLAGS      +=  $(GENFLAGS)
@@ -30,7 +34,11 @@ CPPFLAGS	+=  -E -D__KERNEL__
 CPPFLAGS    +=  $(firmware-cppflags-y)
 
 ASFLAGS     =   -g -Wall
-ASFLAGS     +=  -mabi=lp64 -march=rv64im
+ifeq ($(FENCEI_CSR),y)
+	ASFLAGS     +=  -mabi=lp64 -march=rv64im_zicsr_zifencei
+else
+	ASFLAGS     +=  -mabi=lp64 -march=rv64im
+endif
 ASFLAGS     +=  $(GENFLAGS)
 ASFLAGS     +=  $(firmware-asflags-y)
 
