@@ -6,7 +6,7 @@
 #include "include/asm/csr.h"
 #include "include/asm/io.h"
 #include "include/asm/barrier.h"
-#include "include/light.h"
+#include "include/th1520.h"
 extern void setup_ddr_pmp(void);
 extern void cpu_performance_enable(void);
 extern void clk_reinit(void);

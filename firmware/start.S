@@ -1,5 +1,5 @@
 
-#include "include/light.h"
+#include "include/th1520.h"
 
 	.section .entry, "ax", %progbits
 	.align 3
