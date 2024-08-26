@@ -7,7 +7,7 @@
 #include "include/asm/csr.h"
 #include "include/asm/io.h"
 #include "include/asm/barrier.h"
-#include "include/light.h"
+#include "include/th1520.h"
 
 void mdelay(int ms)
 {
@@ -24,6 +24,15 @@ void release_dsp_tcm(void)
     tmp |= (0x1<<14)|(0x1<<13)|(0x1<<12); // release dsp1
     writel(tmp,(void *)DSPSYS_SW_RST);
 }
+
+void indicator_magic_num_clear(void)
+{
+	writel(0x0, (void *)REG_AON_STR_INDICATOR_0);
+	writel(0x0, (void *)REG_AON_STR_INDICATOR_1);
+	writel(0x0, (void *)REG_AON_STR_INDICATOR_2);
+	writel(0x0, (void *)REG_AON_STR_INDICATOR_3);
+}
+
 void setup_ddr_pmp(void)
 {
     /* clear pmp entry0,entry1 setting in bootrom */
@@ -42,47 +51,49 @@ void cpu_performance_enable(void)
 #define CSR_MHINT2_E    0x7cc
 #define CSR_MHINT4  0x7ce
     csr_write(CSR_SMPEN, 0x1);
-    csr_write(CSR_MHINT2_E, csr_read(CSR_MHINT2_E) | 0x20000);
-    csr_write(CSR_MHINT4, csr_read(CSR_MHINT4) | 0x410);
     csr_write(CSR_MCCR2, 0xe2490009);
-    csr_write(CSR_MHCR, 0x117f); // clear bit7 to disable indirect brantch prediction
     csr_write(CSR_MXSTATUS, 0x638000);
     csr_write(CSR_MHINT, 0x6e30c | (1<<21) | (1<<22)); // set bit21 & bit 22 to close tlb & fence broadcast
+    // FIXME: Clear bit[12] to disable L0BTB.
+    csr_write(CSR_MHCR, 0x17f); // clear bit7 to disable indirect brantch prediction
+    // FIXME set mhint2[22] to enable core icg en
+    csr_write(CSR_MHINT2_E, csr_read(CSR_MHINT2_E) | 0x420000);
+    csr_write(CSR_MHINT4, csr_read(CSR_MHINT4) | 0x410);
 }
 
 void clk_reinit(void)
 {
     unsigned int tmp;
-    tmp = readl((void *)LIGHT_APCLK_ADDRBASE + 0x220);
+    tmp = readl((void *)TH1520_APCLK_ADDRBASE + 0x220);
     tmp |= 0x7;
-    writel(tmp, (void *)LIGHT_APCLK_ADDRBASE + 0x220);
+    writel(tmp, (void *)TH1520_APCLK_ADDRBASE + 0x220);
 
     /* AP rst_gen: VP/VO/VI/DSP */
-    writel(0xf, (void *)LIGHT_APSYS_RSTGEN_ADDRBASE + 0x220);
+    writel(0xf, (void *)TH1520_APSYS_RSTGEN_ADDRBASE + 0x220);
 
     /* enable dsp0/1_cclk, dsp0/1_pclk */
-    tmp = readl((void *)LIGHT_DSP_SUBSYS_ADDRBASE + 0x24);
+    tmp = readl((void *)TH1520_DSP_SUBSYS_ADDRBASE + 0x24);
     tmp |= 0xf;
-    writel(tmp, (void *)LIGHT_DSP_SUBSYS_ADDRBASE + 0x24);
+    writel(tmp, (void *)TH1520_DSP_SUBSYS_ADDRBASE + 0x24);
 
     /* enable gpu_core_clk, gpu_cfg_aclk */
-    tmp = readl((void *)LIGHT_VO_SUBSYS_ADDRBASE + 0x50);
+    tmp = readl((void *)TH1520_VO_SUBSYS_ADDRBASE + 0x50);
     tmp |= 0x18;
-    writel(tmp, (void *)LIGHT_VO_SUBSYS_ADDRBASE + 0x50);
+    writel(tmp, (void *)TH1520_VO_SUBSYS_ADDRBASE + 0x50);
 
-    tmp = readl((void *)LIGHT_VO_SUBSYS_R_ADDRBASE + 0x50);
+    tmp = readl((void *)TH1520_VO_SUBSYS_R_ADDRBASE + 0x50);
     tmp |= 0x3ff;
-    writel(tmp, (void *)LIGHT_VO_SUBSYS_R_ADDRBASE + 0x50);
+    writel(tmp, (void *)TH1520_VO_SUBSYS_R_ADDRBASE + 0x50);
 
     /* enable dpu_pixelclk0/1, dpu_hclk, dpu_aclk, dpu_cclk */
-    tmp = readl((void *)LIGHT_VO_SUBSYS_ADDRBASE + 0x50);
+    tmp = readl((void *)TH1520_VO_SUBSYS_ADDRBASE + 0x50);
     tmp |= 0x3e0;
-    writel(tmp, (void *)LIGHT_VO_SUBSYS_ADDRBASE + 0x50);
+    writel(tmp, (void *)TH1520_VO_SUBSYS_ADDRBASE + 0x50);
 
     /* enable npu_axi_aclk, npu_core_clk */
-    tmp = readl((void *)LIGHT_APCLK_ADDRBASE + 0x1c8);
+    tmp = readl((void *)TH1520_APCLK_ADDRBASE + 0x1c8);
     tmp |= 0x30;
-    writel(tmp, (void *)LIGHT_APCLK_ADDRBASE + 0x1c8);
+    writel(tmp, (void *)TH1520_APCLK_ADDRBASE + 0x1c8);
 
 }
 
@@ -134,7 +145,8 @@ int get_str_flag(void)
         (readl((void *)REG_AON_STR_INDICATOR_2) == 0x32fde438) &&
         (readl((void *)REG_AON_STR_INDICATOR_3) == 0x8ab4c52c))
 	{
-        return 1;
+		indicator_magic_num_clear();
+		return 1;
 	}
 	return 0;
 }
